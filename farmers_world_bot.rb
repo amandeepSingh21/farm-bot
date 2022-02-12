@@ -3,7 +3,7 @@ require "selenium-webdriver"
 require "json"
 describe "Fw" do
   before(:each) do
-    portNumber = "8280"
+    portNumber = "8921"
     driverPath = "/Users/amandeep/Downloads/farm-bot/chromedriver"
     options = Selenium::WebDriver::Chrome::Options.new(debugger_address: "localhost:#{portNumber}", binary: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome')
 
@@ -12,9 +12,9 @@ describe "Fw" do
 
     #options.add_emulation(user_agent: 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36')
     options.add_argument("--headless")
-    #options.add_argument("--disable-extensions")
-    #options.add_argument("--disable-web-security")
-    #options.add_argument("--allow-running-insecure-content")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-web-security")
+    options.add_argument("--allow-running-insecure-content")
 
     @driver = Selenium::WebDriver.for(:chrome, options: options)
     @vars = {}
@@ -23,28 +23,37 @@ describe "Fw" do
     @driver.quit
   end
   it "fw" do
-    @driver.manage.window.resize_to(800, 800)
+    time = Time.now
+    formattedTime = time.strftime("%m-%d-%Y.%H.%M.%S")
+    @driver.manage.window.resize_to(1920, 1080)
     @driver.get("https://play.farmersworld.io//")
 
-    # @driver.session_storage.clear
-    # @driver.local_storage.clear
+    @driver.session_storage.clear
+    @driver.local_storage.clear
 
     Selenium::WebDriver::Wait.new(timeout: 30).until { @driver.find_element(:css, "label").text == "Rpc Endpoint Available" }
-    @driver.save_screenshot "intial.png"
+    @driver.save_screenshot "intial-#{formattedTime}.png"
     dropdown = @driver.find_element(:id, "RPC-Endpoint")
-    dropdown.find_element(:xpath, "//option[. = 'https://api.waxsweden.org']").click
-
     begin
-      @driver.find_element(:css, ".login-button").click
-      Selenium::WebDriver::Wait.new(timeout: 30).until { @driver.find_element(:css, ".login-modal-container") }
-      @driver.save_screenshot "select-wallet.png"
-    rescue Timeout::Error
-      retry
+      dropdown.find_element(:xpath, "//option[. = 'https://api.waxsweden.org']").click
+    rescue Error::NoSuchElementError
+      dropdown.find_element(:xpath, "//option[. = 'https://api.wax.greeneosio.com']").click
     end
 
+    # begin
+    @driver.find_element(:css, ".login-button").click
+    Selenium::WebDriver::Wait.new(timeout: 30).until { @driver.find_element(:css, ".login-modal-button") }
+    @driver.save_screenshot "select-wallet-#{formattedTime}.png"
+    # rescue Timeout::Error
+    #   retry
+    # end
+
     #Selenium::WebDriver::Wait.new(timeout: 30).until { @driver.find_element(:css, '.login-modal-container').present? }
-    @driver.find_element(:css, ".login-modal-button:nth-child(2)").click
-    @driver.save_screenshot "wallet-selected.png"
+    #@driver.find_element(:css, ".login-modal-button").click
+    element = @driver.find_element(:css, ".login-modal-button")
+    @driver.execute_script("arguments[0].click();", element)
+    #root > div > div > div:nth-child(2) > div.login-modal-container > button:nth-child(2)
+    @driver.save_screenshot "wallet-selected-#{formattedTime}.png"
 
     #Wood
     Selenium::WebDriver::Wait.new(timeout: 30).until { @driver.find_element(:css, ".info-title-name").displayed? }
@@ -54,7 +63,7 @@ describe "Fw" do
     @driver.find_element(:css, ".tooltip:nth-child(1) .plain-button").click
     Selenium::WebDriver::Wait.new(timeout: 30).until { @driver.find_element(:css, ".modal-content").displayed? }
     @driver.find_element(:css, ".short").click
-    @driver.save_screenshot "wood-mined.png"
+    @driver.save_screenshot "wood-mined-#{formattedTime}.png"
 
     #Food
     @driver.find_element(:css, ".satellite__card-time").click
@@ -62,7 +71,7 @@ describe "Fw" do
     @driver.find_element(:css, ".tooltip:nth-child(1) .plain-button").click
     Selenium::WebDriver::Wait.new(timeout: 30).until { @driver.find_element(:css, ".modal-content").displayed? }
     @driver.find_element(:css, ".short").click
-    @driver.save_screenshot "food-mined.png"
+    @driver.save_screenshot "food-mined-#{formattedTime}.png"
   end
 end
 
